@@ -1,0 +1,11 @@
+.list-group {
+    list-style: none;
+    padding: 0;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: blueviolet;
+}

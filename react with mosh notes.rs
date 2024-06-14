@@ -1421,7 +1421,7 @@ now, to discuss the differences between props and state;
 * state is like local variables inside a function
 
 handy;
-with es7+ react extension installed, you can type 'rafce' and it will automatically generate a functional component for you. it is short for react arrow function component export.
+with es7+ react extension installed, you can type 'rafce' in vs code/ visual studio code and it will automatically generate a functional component for you, or at least a boilerplate / template. it is short for react arrow function component export.
 
 
 now, how to create a react component that accepts children;
@@ -1532,3 +1532,851 @@ export default App;
 ----
 
 REMEMBER to use react devtools in the browser to inspect the components and see the props and state of each component. it will also show the component tree that react takes and renders to the dom.
+
+in interfaces, a union type is;
+In the React context, a union type allows a prop to accept multiple specific types rather than a single type. This is particularly useful for props that can have a limited set of acceptable values. In the provided Button.tsx example, the colour prop in the ButtonProps interface uses a union type to restrict its possible values to either 'primary' or 'secondary'. This ensures that when a <Button /> component is used within a React application, it can only receive colour props that match one of these two specified values, enhancing type safety and predictability in the component's behavior.
+
+Here's a breakdown of the union type in the given context:
+
+Union Type ('primary' | 'secondary'): This syntax specifies that the colour prop can only be one of two string literals: 'primary' or 'secondary'. It's a way to enforce that the prop adheres to a specific set of values, which can be useful for component styling or behavior that depends on a limited set of options.
+
+Optional Prop (colour?): The question mark (?) after the prop name indicates that the colour prop is optional. This means a <Button /> component can be used with or without specifying a colour prop. If the colour prop is provided, it must be either 'primary' or 'secondary'.
+
+React Context: In the broader context of a React application, using union types for props like this can help ensure components are used correctly throughout the application. It provides clear documentation through code about what values a prop can accept, making the component's API easier to understand and use. Additionally, it allows TypeScript to catch errors during development if a component receives a prop value outside of the specified union, reducing runtime errors and improving the overall quality of the application.
+
+This approach leverages TypeScript's static type checking to enhance code quality and developer experience in React applications.
+
+an example of a union type in typescript is;
+Button.tsx
+
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick: () => void;
+  //colour?: string; //question mark denotes optional property
+  //add as many bootstrap colours here as intended
+  //this implementation restricts the colour prop to one of these
+  colour?: 'primary' | 'secondary' | 'danger'; //uit's called a union type
+}
+
+const Button = ( { children, onClick, colour = 'primary'}: ButtonProps ) => {
+  return (
+    <button className={"btn btn-" + colour} onClick={onClick}>{children}</button>
+  )
+}
+
+export default Button
+-------
+
+and in App.tsx;
+import Alert from "./components/Alert";
+import Button from "./components/Button";
+
+function App() {
+  return (
+    <div>
+      {/* passing just a string */}
+      {/* <Alert children="Hello world." /> */}
+      {/* but now, with reactnode in use, we can pass a complex type */}
+      {/* better to include components like this */}
+      <Alert>
+        Hello <span>world.</span>
+      </Alert>
+      <Button  onClick={() => console.log('Clicked!!!')}>Press the button.</Button>
+    </div>
+  );
+}
+
+export default App;
+------
+
+more, demonstrating how to use a union type in typescript, to make an alert appear and disappear with buttons;
+alert component Alert.tsx ;
+//we wanna make the text of the alert component dynamic, so we will pass the text as a prop to the component, using a interface to define the prop type and shape
+
+interface AlertProps {
+  //children: string; // special prop that all components support, which allows us to pass text as children to this component when Alert is used in App.tsx.
+
+  //using string works, but there is a better way; ReactNode
+  children: React.ReactNode; //this allows us to pass any type of data as children to the component
+  onClose: () => void;
+}
+
+//remember to destructure
+const Alert = ({ children, onClose }: AlertProps) => {
+  return (
+    <div className="alert alert-primary alert-dismissible fade show">
+      {children}
+      {/* REMEMBER the onClose function, we are just passing the onClose function through, NOT INVOKING IT RIGHT NOW. only when the user clicks on the close button will react call the function for us */}
+      <button type="button" onClick={onClose} className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  );
+};
+
+export default Alert;
+-----
+
+button component Button.tsx ;
+
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick: () => void;
+  //colour?: string; //question mark denotes optional property
+  //add as many bootstrap colours here as intended
+  //this implementation restricts the colour prop to one of these
+  colour?: 'primary' | 'secondary' | 'danger'; //it's called a union type
+}
+
+const Button = ( { children, onClick, colour = 'primary'}: ButtonProps ) => {
+  return (
+    <button className={"btn btn-" + colour} onClick={onClick}>{children}</button>
+  )
+}
+
+export default Button
+-----
+
+and now, how they're used in App.tsx ;
+import { useState } from "react";
+import Alert from "./components/Alert";
+import Button from "./components/Button";
+
+function App() {
+  //determine the initial state of the alert (initially hidden)
+  const [alertVisible, setAlertVisibility] = useState(false); //this returns an array that we can destructure
+
+  return (
+    <div>
+      {/* passing just a string */}
+      {/* <Alert children="Hello world." /> */}
+      {/* but now, with reactnode in use, we can pass a complex type */}
+      {/* don't forget to set an error function here */}
+      { alertVisible && <Alert onClose={() => setAlertVisibility(false)}> My alert message.</Alert> }
+      <Button colour="danger" onClick={() => setAlertVisibility(true)}>
+        Press the button.
+      </Button>
+    </div>
+  );
+}
+
+export default App;
+
+
+a note about App.tsx and how multiple react apps can be included in something like a larael project;
+GitHub Copilot
+No, App.tsx is not the only entry point for all React apps. It is a common convention in React projects, especially those created with Create React App, to have a single App component that serves as the root component. However, you can structure your React application differently if needed.
+
+You can indeed have multiple React apps within a single project, including a Laravel project. Each React app would have its own root component and could be mounted to a different element in the DOM. This is useful if you want to enhance different parts of a traditional server-rendered app with React or if you have multiple independent React applications within a single project.
+
+Here's a simplified example of how you might include multiple React apps in a Laravel project:
+
+Create Multiple Entry Points: In your React project, create separate entry points for each app. For example, you might have App1.tsx and App2.tsx as the root components for your two React apps.
+
+Compile Your React Apps: Use a bundler like Webpack to compile each of your React apps into separate bundles. Configure your bundler to have multiple entry points corresponding to each of your React apps.
+
+Include the Compiled Scripts in Your Laravel Views: In your Laravel project, include the compiled JavaScript files for your React apps in the appropriate blade templates. You can use Laravel Mix to manage and compile your assets, including React apps, for a smoother integration.
+
+Mount Each App to a Different DOM Element: In the HTML that's rendered by Laravel (e.g., in your blade templates), include different div elements with unique IDs where you want your React apps to mount. Then, in each React app's entry point, use ReactDOM.render to mount the app to the corresponding element.
+
+<!-- In a Laravel blade template -->
+<div id="react-app-1"></div>
+<div id="react-app-2"></div>
+
+// In App1.tsx
+ReactDOM.render(<App1 />, document.getElementById('react-app-1'));
+
+// In App2.tsx
+ReactDOM.render(<App2 />, document.getElementById('react-app-2'));
+
+This setup allows you to enhance different parts of your Laravel application with React, giving you the flexibility to use React as much or as little as you need. It's a common approach for integrating React into existing server-rendered applications.
+
+programming concept of cohesion----
+Cohesion is a programming concept that refers to how closely related and focused the responsibilities of a module or component are. High cohesion means that a module or component has a single, well-defined purpose and performs a specific set of related tasks. Low cohesion, on the other hand, means that a module or component has multiple unrelated responsibilities and performs a variety of tasks that are not closely related.
+
+aka., things that are related should be together, and things that are not related should be apart. this is a key principle in software design and architecture, as it helps to create more maintainable, understandable, and scalable code.
+
+CSS TIME!!!!
+what is a barrel file in typescript?
+A barrel file in TypeScript (and by extension, in projects like React that use TypeScript) is a way to simplify imports from multiple modules by re-exporting all of their exports from a single place. Essentially, it's a file (commonly named index.ts or index.tsx) that consolidates exports of other files within the same directory. This allows you to import multiple modules from a single location, making your import statements cleaner and more manageable.
+
+For example, if you have several components in a folder and you want to import them elsewhere in your project, instead of importing each component individually like this:
+import ComponentA from './components/ComponentA';
+import ComponentB from './components/ComponentB';
+import ComponentC from './components/ComponentC';
+
+you can create a barrel file named index.ts inside the components folder that re-exports all of these components
+
+// In components/index.ts
+export { default as ComponentA } from './ComponentA';
+export { default as ComponentB } from './ComponentB';
+export { default as ComponentC } from './ComponentC';
+
+Then, you can import the components with a single line in your other files:
+
+import { ComponentA, ComponentB, ComponentC } from './components';
+
+This approach not only makes your import statements more concise but also helps with maintaining your imports when you add or remove exported members in your modules.
+
+
+barrel file; index.ts
+import ListGroup from "./ListGroup";
+
+export default ListGroup;
+
+and it can be used like this in App.tsx;
+import ListGroup from "./components/ListGroup"; //with this, by default, the compiler will look for an index.ts file in the folder, and if it finds one, it will use that file as the default export
+
+css module;
+a css file in which all class names and animation names are scoped locally by default. this means that class names are unique to the component, and not global. this is useful for avoiding naming conflicts and making styles more maintainable. this helps avoid clashes
+makes styles be
+
+REMEMBER ESPECIALLY hyphenated class names in css are not valid in javascript and typescript, so you can't use them in react. so instead of using hyphenated class names, use camel case. so instead of using something like;
+
+and as part of bundling our application, vite will take all the css modules and create a unique class name for each of them. it'll then bundle them into a single css file, which will be included in the final build of our application. this is done automatically by vite, so we don't have to worry about it.
+
+such as, in a fragment, you can return;
+<>
+<ul className="styles['list-group']">  {/*this way, but it ugly */} </ul>
+<ul className='{styles.listGroup}>  {/*so use camel notation instead */} </ul>
+</>
+
+multiple styles, can use this-- put into an array then join
+<ul className={[styles.listGroup, styles.container].join(' ')}>
+
+CSS IN JS
+this is another approach to css.
+it involves writing css styles directly in javascript files, using a library like styled-components or emotion. this allows you to define styles as javascript objects or template literals, and then use them as components in your react application. this approach can make it easier to manage styles, especially when working with component-based architectures.
+
+this requires a new package called
+npm install styled-components
+
+and an example of styled components used is this here, in ListGroup.tsx;
+import styles from "./ListGroup.module.css";
+import { useState } from "react";
+import styled from "styled-components";
+
+//creating a styled component
+//this replaces regular html elements with a styled component
+//components like these allow for the grouping of styles, and can be reused
+const List = styled.ul`
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+`;
+
+//the li styled component needs its own shape / interface
+interface ListItemProps {
+  active: boolean;
+}
+
+//pass the interface that represents the shape of the props to the styled component
+const ListItem = styled.li<ListItemProps>`
+  padding: 10px;
+  cursor: pointer;
+  background: ${(props) =>
+    props.active ? "blue" : "none"}; // Adjusted to use transient prop
+`;
+
+interface ListGroupProps {
+  //now define various properties and their types
+  items: string[]; //array of strings
+  heading: string; //string
+  //this is an example of type annotation
+  //we can also add a function, something like;
+  // (item: string) => void
+  //so by convention, we'd do something like
+  onSelectItem: (item: string) => void;
+  //this is a property, the type of which is a function, that takes a string as a parameter, and returns void
+}
+
+function ListGroup({ items, heading, onSelectItem }: ListGroupProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  // const [name, setName] = useState("");
+
+  return (
+    <>
+      <h1>{heading}</h1>
+      {items.length === 0 && <p>There are no items in the list.</p>}{" "}
+      {/* this html element........ */}
+      {/* <ul className={[styles.listGroup, styles.container].join(' ')}>  so use camel notation instead */}
+      {/* ...will be replaced with a styled component */}
+      <List className={styles.listGroup}>
+        {/* observe that you're mapping each items to a list item 
+        each item, we have access to, and is used as a key */}
+        {items.map(
+          (
+            item,
+            index //when mapping items, you can optinally pass in the index of the item as a second argument
+          ) => (
+            // <li
+            //once more regular html elements are replaced with styled components
+            <ListItem
+              active={index === selectedIndex}
+              key={item}
+              //writing a simple error function
+              onClick={() => {
+                setSelectedIndex(index);
+                onSelectItem(item); //calling the function that was passed in as a prop from the parent component (app.tsx), where listgroup is being used
+              }}
+            >
+              {item}
+              {/* </li> */}
+            </ListItem>
+          )
+        )}
+        {/* </ul> */}
+      </List>
+    </>
+  );
+}
+
+export default ListGroup;
+
+----
+template literals in javascript;
+A template literal in JavaScript is a way to output variables in a string. It allows for embedded expressions, which can include variables, operations, and function calls. Template literals are enclosed by backticks (`) instead of single or double quotes, and expressions within the string are identified by the dollar sign and curly braces (${expression}).
+
+Here's a basic example:
+const name = "John";
+const greeting = `Hello, ${name}!`;
+console.log(greeting); // Output: Hello, John!
+
+Template literals can span multiple lines, which makes creating multi-line strings easier:
+const item = "coffee";
+const price = 3.5;
+const multiLineString = `This is a multi-line string:
+The price of ${item} is $${price}.`;
+console.log(multiLineString);
+
+They can also include expressions:
+Template literals provide a more readable and convenient syntax for creating complex strings and can be particularly useful in generating dynamic content.
+
+NOW -- separating concerns in react;
+divide a program into distinct sections where each section handles a specific functionality or aspect of the program. this makes the code easier to understand, maintain, and test. in react, this can be achieved by separating concerns into components, hooks, and other reusable units of code.
+
+this will allow apps to be;
+- modular
+- easier to understand
+- easier to maintain
+- easier to modify
+
+modularity in particular brings a numbe rof benefits. if you have a large application, it can be difficult to manage all the code in a single file. by breaking the code into smaller, more manageable pieces, you can make it easier to understand and maintain. it also makes it easier to reuse code, as you can use the same components in multiple places in your application.
+
+if our apps are modular, we can build and test thes modules independently, which makes it easier to identify and fix bugs. it also makes it easier to add new features to the app, as you can add new modules without having to change the existing code.
+
+each module should have a single responsibility (like chefs in a kitchen), and should be loosely coupled with other modules. this means that each module should do one thing, and do it well. it should not depend on other modules, and should be easy to replace or modify without affecting other parts of the app.
+
+in a module, all the complexity and implementation details are hidden behind a well-defined interface (like the remote control of a tv). this makes it easier to understand and use the module, as you only need to know how to interact with the interface, and not how the module works internally.
+
+inline css styles --
+not recommended in react. save for very rare / special occasions
+inline styling uses camel case, and not hyphenated class names
+example;
+{/* this line also features use of inline css styling - but use sparingly */}
+<List className={styles.listGroup} style={{ backgroundColor: 'greenyellow' }}/>
+BUT ONLY USE AS LAST RESORT
+
+material ui - a popular library, built by google, for react that provides pre-built components and styles that you can use in your applications. it's a great way to quickly build user interfaces without having to write a lot of css code. it also provides a theming system that allows you to customize the look and feel of your app.
+
+tailwind - a utility-first css framework that provides a set of pre-built utility classes that you can use to style your components. it's a great way to quickly style your app without having to write a lot of custom css code by hand. it also provides a theming system that allows you to customize the design of your app.
+
+daisy ui - a collection of components and styles, similar to bootstrap , built on top of tailwind css. it provides a set of pre-built components that you can use to quickly build user interfaces. it also provides a theming system that allows you to customize the design of your app.
+
+chakra ui - a simple, modular and accessible component library, built on top of tailwind, that provides a set of pre-built components and styles that you can use to quickly build user interfaces. it's built on top of styled-components and emotion, and provides a theming system that allows you to customize the design of your app.
+
+now; react icons;
+react-icons is a popular library that provides a set of pre-built icons that you can use in your react applications. it includes a wide range of icons from popular icon libraries like font awesome, material icons, and many others. you can easily include these icons in your app by importing them as react components.
+example usage;
+import { FaCalendarWeek } from "react-icons/fa";
+
+function App() {
+  return (
+    <div>
+      <FaCalendarWeek color="red" size="40"/>
+    </div>
+  );
+}
+
+export default App;
+-------
+
+exercise, using css in jss styling;
+ButtonFancy.tsx ;
+import styles from './ButtonFancy.module.css'
+
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick: () => void;
+  //colour?: string; //question mark denotes optional property
+  //add as many bootstrap colours here as intended
+  //this implementation restricts the colour prop to one of these
+  colour?: 'primary' | 'secondary' | 'danger'; //it's called a union type
+}
+
+
+export const ButtonFancy = () => ( { children, onClick, colour = 'primary'}: ButtonProps ) => {
+  return (
+    // need to set classname to array as we want to reference two css classes, with some dynamicism
+    <button className={[styles.btn, styles['btn-' + colour]].join(' ')} onClick={onClick}>{children}</button>
+  )
+}
+
+export default ButtonFancy
+------
+
+and in App.tsx ;
+import Button from "./components/Button";
+
+//using react-icons, which are essentially components
+import { FaCalendarWeek } from "react-icons/fa";
+
+function App() {
+  //determine the initial state of the alert (initially hidden)
+
+  return (
+    <div>
+      <Button colour="danger" onClick={() => {}}>Ugly 🦆🦆</Button>
+    </div>
+  );
+}
+
+export default App;
+----
+
+another example of using css in js styling -- creating a toggable like button;
+Like.tsx;
+import { useState } from "react";
+
+//using react-icons, which are essentially components
+import { FaHeartCrack } from "react-icons/fa6";
+import { FaGrinHearts } from "react-icons/fa";
+
+interface LikeProps {
+ onClick: () => void;
+}
+
+const Like = ({ onClick}: LikeProps) => {
+    // in a real application, this status will be fetched from a database, set dynamically, etc.
+  const [status, setStatus] = useState(true);
+
+    //encapsulate the logic for the button in a toggle function
+    const toggle = () => {
+        setStatus(!status); //whatever status is, pass the inverted value
+        onClick(); //called to notify the parent component (the consumer) that the button has been clicked
+    }
+
+  if (status) return <FaHeartCrack color="#ff6b81" size={20} onClick={toggle}  />;
+    return <FaGrinHearts color="lightblue" size={20} onClick={toggle} />;
+
+};
+
+export default Like;
+---------
+
+and in App.tsx ;
+import Button from "./components/Button";
+import FaHeartCrack from "./components/Like/Like";
+
+
+function App() {
+  //determine the initial state of the alert (initially hidden)
+
+  return (
+    <div>
+      <Button colour="danger" onClick={() => {}}>Ugly 🦆🦆</Button>
+      <br/>
+      {/* setting onClick prop for Like.tsx, as well as an error function */}
+      <FaHeartCrack onClick={() => console.log('clicked!')} />
+    </div>
+  );
+}
+
+export default App;
+------
+
+state management
+-- a fundamental concept in react, and it refers to the management of data that changes over time. in react, state is used to store data that can change over time, such as user input, api responses, and other dynamic data. state management is important in react because it allows you to build dynamic and interactive user interfaces.
+
+so we know with state hook, we can add state to functional components, and we can use the state hook to add state to our functional components. but what if we have multiple components that need to share the same state, or if we have complex state that needs to be shared across multiple components? this is where state management comes in.
+
+refresher on state hook;
+- react updates state asynchronously (not immediately). done for performance reasons
+- state is stored outside of the component function, thanks to this hook (state hook), and is preserved between re-renders
+- hooks can only be called at the top level of a functional component, and not inside loops, conditions, or nested functions. this is a rule of hooks in react, and so it means that you can't call hooks inside loops, conditions, or nested functions. you can only call hooks at the top level of a functional component, and this is because react relies on the order in which hooks are called to keep track of the state of the component. if you call hooks inside loops, conditions, or nested functions, react won't be able to keep track of the state of the component, and this can lead to bugs and unexpected behavior.
+
+and when choosing the state structure;
+- avoid redundant state variables
+- group related variables inside an object
+- avoid deeply nested state objects (hard to manage)
+
+AND just like props, we should treat state objects as immutable, and avoid directly modifying them. instead, we should use the setter function provided by the state hook to update the state object. this is because react relies on the immutability of state objects to optimize the rendering process, and avoid unnecessary re-renders.
+
+now for - purity ;
+- a pure function is a function that always returns the same output for the same input, and has no side effects. this means that a pure function does not modify any external state, and only depends on its input arguments. in react, pure functions are used to calculate derived state, and are called inside the render method of a component. this allows react to optimize the rendering process, and avoid unnecessary re-renders.
+- if given the same input, it will always return the same output, and it has no side effects. this means that it does not modify any external state, and only depends on its input arguments. in react, pure functions are used to calculate derived state, and are called inside the render method of a component. this allows react to optimize the rendering process, and avoid unnecessary re-renders.
+
+e.g.;
+const result = myFunction(1); // result = 'b'
+react is designed around his concept, it expects every component to be a pure function of its props and state. this means that given the same props and state, a component should always render the same output. this is important for performance, because react can optimize the rendering process by comparing the output of a component to the previous output, and only re-rendering the component if the output has changed.
+
+but how to keep components pure?
+keep any changes out of the render phase
+and we should not change any objects that existed before rendering
+but note that IT IS FINE to update an object that was created during rendering, e.g., in the return function of a component
+
+now - strict mode;
+- a react feature that helps identify impure components
+so remember this in main.tsx? ;
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+one of the thinga th strict mode does is that it helps identify impure components, and it does this by running the component twice, and comparing the output of the first and second runs. if the output is different, it means that the component is impure, and react will log a warning to the console. this is useful for identifying components that are not pure, and can help you optimize your app for performance.
+
+so for example, a 'pure' component will look like;
+MessagePure.tsx;
+//example of pure component
+
+let count = 0;
+
+const MessagePure = () => {
+  return (
+    <div>MessagePure {count} </div>
+  )
+}
+
+export default MessagePure
+
+-----
+
+whilst an 'impure' component will look like this;
+MessageImpure.tsx;
+
+let count = 0;
+
+const MessagePure = () => {
+  count++; //the part that makes this impure, this will increment the count every time the component is rendered, which is twice.
+
+  //1. rendered first to check for issues and impurities
+  //2. rendered again to show the actual component
+
+  //we can see the double rendering in the console, as the count will be incremented twice;
+  console.log(`MessagePure rendered ${count} times`);
+
+
+  return (
+    <div>MessagePure {count} </div>
+  )
+}
+
+export default MessagePure
+
+
+----
+more on why react renders impure components twice in development mode;
+
+The behavior you're observing, where React renders components twice in development mode, is due to React's StrictMode. React's StrictMode is a tool for highlighting potential problems in an application. It activates additional checks and warnings for its descendants.
+
+StrictMode does not render components twice in production; it only does this in development mode. The double rendering happens only for class components and function components (including hooks) that are children of the StrictMode component.
+
+Here are the main reasons why React might render a component twice in development mode when using StrictMode:
+
+Identify Side Effects: Rendering a component twice helps identify side effects in the render phase. A side effect is any change that can be observed outside the scope of the function being executed. In React, the render phase should be pure and without side effects. By rendering twice, React can help developers spot and fix side effects in the render phase.
+
+Detecting Unexpected Behavior: It helps in detecting unexpected behavior in the application that might not be visible. For example, if a component relies on a side effect from the render phase (which it shouldn't), rendering it twice might expose that reliance.
+
+Preparation for Concurrent Mode: React's future Concurrent Mode relies on the ability to interrupt rendering and start it over. This means components might render multiple times before the screen gets updated. By rendering components twice in development, StrictMode prepares developers for this model by ensuring their components can handle such scenarios without issues.
+
+The reason React takes the result of the second rendering is to ensure that the component's behavior is consistent and does not rely on side effects from the first rendering. This is a development aid to help enforce best practices in writing components but does not affect production builds.
+
+In your specific case, the comment suggests that the MessageImpure components might be relying on some form of state or side effect that changes with each render, leading to the observed behavior of rendering as "2 4 6". This is a demonstration of how StrictMode can help identify and rectify impurities or side effects in component renders.
+
+in other words;
+-- the first render is used primarily for detecting and reporting potential issues with the code. it is to identify side effects, and the second render is used to verify that the component is pure. if the output of the first and second renders is different, it means that the component is impure, and react will log a warning to the console. this is useful for identifying components that are not pure, and can help you optimize your app for performance.
+-- the second render is used to actually render the component to the dom. this is the render that the user sees, and it is the one that is used to update the dom when the state of the component changes. it is used to actually update the user interface
+
+from react 18, strict mode is turned on by default. needs to be turned off for production
+
+now... updating normal objects in react;
+example;
+App.tsx
+import { useState } from "react";
+
+function App() {
+  //remember, when dealing with objects an arrays, treat them as immutable  / read-only
+  const [drink, setDrink] = useState({
+    title: "Capuccino",
+    price: 5,
+  });
+
+  const handleClick = () => {
+    //don't want to mutate the state directly, so create a new object
+    setDrink({
+      //but copying all these properties is a bit tedious, so use the spread operator
+      // title: drink.title === "Capuccino" ? "Latte" : "Capuccino",
+      ...drink, //copies all properties of drink object into newDrink object
+      price: drink.price === 5 ? 6 : 5, //an example of changing a property
+    });
+  };
+
+  return (
+    <div>
+      {drink.title} - ${drink.price}
+      <br></br>
+      <button onClick={handleClick}>Change Drink</button>
+    </div>
+  );
+}
+
+export default App;
+-----
+
+we used the SPREAD OPERATOR ( ... ) above, this is;
+- a javascript feature that allows you to spread the elements of an array or the properties of an object into another array or object. this can be useful for copying arrays and objects, merging arrays and objects, and creating new arrays and objects with additional elements or properties.
+- but note that it is a shallow copy, and not a deep copy. this means that it only copies the top-level properties of an object, and not the nested properties. if you need to copy nested properties, you will need to use a deep copy method, such as JSON.parse(JSON.stringify(obj)).
+- when updating state in react apps, we should always create a new object or array, and not modify the existing object or array directly. this is because react relies on the immutability of state objects to optimize the rendering process, and avoid unnecessary re-renders. by creating a new object or array, we ensure that react can detect the changes to the state object, and update the component accordingly.
+
+example of updating a nested object;
+App.tsx
+import { useState } from "react";
+
+function App() {
+  const [customer, setCustomer] = useState({
+    name: "John Doe",
+    age: 25,
+    address: {
+      street: "123 Main St",
+      city: "Anytown",
+      state: "NY",
+      zip: "12345",
+    },
+  });
+
+  //remember to use spread operator to copy the object, and then change the property.
+  //also keep a flat structure, and avoid deeply nested objects
+  //and also, when updating state in react apps, we should always create a new object or array, and not modify the existing object or array directly. this is because react relies on the immutability of state objects to optimize the rendering process, and avoid unnecessary re-renders. by creating a new object or array, we ensure that react can detect the changes to the state object, and update the component accordingly.
+  const handleClick = () => {
+    setCustomer({
+      ...customer,
+      address: { ...customer.address, city: "Nueva York" }, //this is the correct way to update nested objects in react. by setting the address property to a new object, we ensure that the address object is replaced with a new object, and not modified directly. this allows react to detect the change, and update the component accordingly.
+    });
+  };
+
+  return (
+    <div>
+      {customer.name} is {customer.age} years old.
+      <br />
+      Residence: {customer.address.street}, {customer.address.city},{" "}
+      {customer.address.state} {customer.address.zip}
+      <br />
+      <button onClick={handleClick}>Change City</button>
+    </div>
+  );
+}
+
+export default App;
+------
+
+the same is true for arrays--
+we should always create a new array when updating state in react apps, and not modify the existing array directly. this is because react relies on the immutability of state objects to optimize the rendering process, and avoid unnecessary re-renders. by creating a new array, we ensure that react can detect the changes to the state array, and update the component accordingly.
+
+how to update an array in react;
+App.tsx
+import { useState } from "react";
+
+function App() {
+
+  const [tags, setTags] = useState(["react", "angular", "vue"]);
+
+  const handleClick = () => {
+    //add
+    setTags([...tags, "svelte"]);
+
+    //remove
+    setTags(tags.filter((tag) => tag !== "angular"));
+
+    //update
+    setTags(tags.map((tag) => (tag === "react" ? "reactjs" : tag)));
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick}>Change City</button>
+    </div>
+  );
+}
+
+export default App;
+----
+
+and as for updating an array of objects;
+App.tsx
+import { useState } from "react";
+
+function App() {
+  //updating an array of bugs
+  const [bugs, setBugs] = useState([
+    { id: 1, description: "Bug 1", fixed: false },
+    { id: 2, description: "Bug 2", fixed: false },
+    { id: 3, description: "Bug 3", fixed: false },
+  ]);
+
+  const handleClick = () => {
+    setBugs(bugs.map((bug) => (bug.id === 1 ? { ...bug, fixed: true } : bug)));
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick}>Change City</button>
+    </div>
+  );
+}
+
+export default App;
+----
+
+...but this can get repetitive, so we can simplify things;
+
+using immer library; --
+immer is a popular library that simplifies the process of updating nested objects and arrays in react. it allows you to write code that looks like mutable code, but is actually immutable under the hood. this makes it easier to update state in react components, and can help reduce the amount of boilerplate code needed to manage state.
+like so;
+App.tsx
+import { useState } from "react";
+import { produce } from 'immer';
+
+function App() {
+  //updating an array of bugs
+  const [bugs, setBugs] = useState([
+    { id: 1, description: "Bug 1", fixed: false },
+    { id: 2, description: "Bug 2", fixed: false },
+    { id: 3, description: "Bug 3", fixed: false },
+  ]);
+
+  const handleClick = () => {
+    //the classic way to update an array of objects
+    //setBugs(bugs.map((bug) => (bug.id === 1 ? { ...bug, fixed: true } : bug)));
+    //using immer to update an array of objects
+    setBugs(produce(draft => {
+        const bug = draft.find(bug => bug.id === 1);
+        if (bug) {
+            bug.fixed = true; //here we are updating the object in the array/mutating the object
+        }
+      }));
+  };
+
+  return (
+    <div>
+      {bugs.map(bug => <p key={bug.id}>{bug.description} - {bug.fixed ? 'Fixed' : 'New'}</p>)}
+      <button onClick={handleClick}>Change Bug</button>
+    </div>
+  );
+}
+
+export default App;
+--------
+
+OH!!! REMEMBER! ;
+as a rule of thumb,  the component that owns / holds the state should be the one modifying it, is the one responsible for updating the state
+
+
+..... NOW, prop drilling;
+
+now, sometimes we need to share state between components, and this is where state management comes in. state management is the process of managing the state of an application, and it involves storing, updating, and sharing state between different components. in react, state management is typically done using context, redux, or other state management libraries.
+
+for example; 
+            App.tsx
+          /        \
+        /           \
+    NavBar.tsx    Cart.tsx
+now, we have used the state hook in the Cart.tsx component to store the list of sohpping items. to share the state with the NavBar.tsx component, we have to lift the state up to the closest parent, the App.tsx component, and then pass the state down to the child components as props / share it as needed. this is called prop drilling, and it can be cumbersome and error-prone, especially when dealing with deeply nested components.
+
+prop drilling example (as well as sharing state between components);
+CHILD COMPONENTS ---
+Cart.tsx
+//define the shape of the props
+interface CartProps {
+  cartItems: string[];
+  onClear: () => void;
+  //onRemove: (index: number) => void; //if we wanted to allow the user to remove an item from the cart
+} //and remember to treat them as immutable objects / read-only
+
+//destructuring the props (not going to modify them here)
+const Cart = ({ cartItems, onClear }: CartProps) => {
+  return (
+    //remember, we are using a fragment here, so we don't have to wrap the elements in a div
+    <>
+      <div>Cart</div>
+      <ul>
+        {/* grabbing the cart items and mapping them to list items */}
+        {cartItems.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+      {/* instead, we need to notify the app.tsx component that the user clicked on the clear button. so all changes to the state should be done inside the parent component / app.tsx.  */}
+      <button onClick={onClear}>Checkout</button> 
+      {/* passing a reference */}
+    </>
+  );
+};
+
+export default Cart;
+-----
+
+NavBar.tsx ;
+import React from 'react'
+
+//define the shape of the props
+interface NavBarProps {
+    //there's a few options here
+    //1. pass all the shopping cart items as an array
+    //cartItems: string[]
+    //2. pass the number/count of items in the shopping cart
+    cartItemsCount: number
+}
+//destructuring the props
+const NavBar = ( {cartItemsCount}: NavBarProps) => {
+  return (
+    <div>NavBar: {cartItemsCount}</div>
+  )
+}
+
+export default NavBar;
+-----
+
+and PARENT, from where the state is managed;
+App.tsx ;
+import { useState } from "react";
+import NavBar from "./components/NavBar";
+import Cart from "./components/Cart";
+
+
+function App() {
+  //use state hook to store list of shopping items
+  //real world example of a shopping list;
+  // const [shoppingItems, setShoppingItems] = useState([
+  //   { id: 1, name: "Milk" },
+  //   { id: 2, name: "Bread" },
+  //   { id: 3, name: "Cheese" },
+  // ]);
+
+  //but for this example, we will use a simple list;
+  //and with the state defined, we can pass it to the child components as props
+  //as a rule of thumb, remember; the component that owns / holds the state should be the one modifying it, is the one responsible for updating the state
+  const [cartItems, setCartItems] = useState([
+    "Product 1",
+    "Product 2",
+    "Product 3",
+  ]);
+
+  //because this is where we're maintaing state, all the changes and updates to the cart items state should be done in this component.
+  
+  //by the same token, if we wanted to allow the user to remove an item from the cart, we would need to pass a function prop to the Cart component that would allow it to remove an item from the cart, like onRemove
+
+  return <div>
+    <NavBar cartItemsCount={cartItems.length} />
+    <Cart cartItems={cartItems} onClear={() => setCartItems([])} />
+  </div>;
+}
+
+export default App;
+
